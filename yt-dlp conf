@@ -1,3 +1,5 @@
 
 #download audio with embedded thumbnail use "\" for windows and "/" for others
 yt-dlp -f bestaudio[ext=m4a] --embed-thumbnail --embed-metadata --embed-chapters --download-archive DLed.txt -o "~/%(channel)s/%(title)s.AUDIO.%(ext)s" -a "link.of.text.txt"
+
+
