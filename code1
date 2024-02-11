@@ -7,12 +7,11 @@ Windows
 yt-dlp --write-sub --embed-subs --sub-langs "en" --convert-subs srt -f 'bv*[height<=720]+ba' --embed-thumbnail --embed-metadata --embed-chapters  --no-mtime  --download-archive viid720.txt -o "E:\All\YTA\%(upload_date)s.%(channel)s\%(upload_date)s - %(title)s.720.%(ext)s" -a Link
 
 #480# edit at end
-yt-dlp --write-sub --embed-subs --sub-langs "en" --convert-subs srt -f 'bv*[height<=480]+ba' --embed-thumbnail --embed-metadata --embed-chapters  --no-mtime --ffmpeg-location "C:\ffmpeg" --download-archive videos720.txt -o "E:\All\YTA\%(channel)s\%(upload_date)s - %(title)s.%(id)s.480.%(ext)s" -a Link.txt
+yt-dlp --write-sub --embed-subs --sub-langs "en" --convert-subs srt -f 'bv*[height<=480]+ba' --embed-thumbnail --embed-metadata --embed-chapters  --no-mtime --ffmpeg-location "C:\ffmpeg" --download-archive videos720.txt -o "E:\YT\%(channel)s\%(upload_date)s - %(title)s.%(id)s.480.%(ext)s" -a Link.txt
 ==================================
 Others 
 #720# edit at end
-yt-dlp --write-sub --embed-subs --sub-langs "en" --convert-subs srt -f 'bv*[height<=720]+ba' --embed-thumbnail --embed-metadata --embed-chapters  --no-mtime  --download-archive viid720.txt -o "YT/%(channel)s/%(upload_date)s - %(title)s - %(id)s.720.%(ext)s" -a Link.txt
-
+/home/user/.pyenv/shims/python3.11 yt-dlp -a textytlink.txt --write-sub --embed-subs --sub-langs "en" --convert-subs srt -f 'bv*[height<=720]+ba' --embed-thumbnail --embed-metadata --embed-chapters --no-mtime --download-archive myarchive.txt -o 'YT/%(channel)s/%(upload_date)s - %(title)s.%(id)s.720.%(ext)s'
 #480# edit at end
 yt-dlp --write-sub --embed-subs --sub-langs "en" --convert-subs srt -f 'bv*[height<=480]+ba' --embed-thumbnail --embed-metadata --embed-chapters  --no-mtime --ffmpeg-location "C:\ffmpeg" --download-archive videos720.txt -o "YT/%(channel)s/%(upload_date)s - %(title)s - %(id)s.480.%(ext)s" -a Link.txt
 +++++++++++++++++++++++++++++++++++==
