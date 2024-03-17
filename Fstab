@@ -1,0 +1,7 @@
+# working auto mount
+# at /etc/fstab
+
+UUID="**" /media/hdd1 auto nosuid,nodev,nofail,x-gvfs-show,x-systemd.mount-timeout=6 0 0
+
+edit ** with real uuid
+timeout can be changed too
