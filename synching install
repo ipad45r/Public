@@ -1,0 +1,31 @@
+1. Install, ubuntu 
+sudo apt install curl apt-transport-https
+
+curl -s https://syncthing.net/release-key.txt | sudo apt-key add -
+
+echo "deb https://apt.syncthing.net/ syncthing release" | sudo tee /etc/apt/sources.list.d/syncthing.list
+
+sudo apt update
+
+syncthing --version
+sudo apt install syncthing
+
+2. Setup start automatically 
+sudo systemctl enable syncthing@myuser.service
+
+sudo systemctl start syncthing@myuser.service
+
+sudo systemctl status syncthing@myuser.service
+
+Change web interface config
+nano /home/$user/.config/syncthing/config.xml
+
+On raspberry raspi config location
+/home/user/.local/state/syncthing
+
+to change 127.0.0.1:8384 to 0.0.0.0:8384
+
+sudo systemctl restart syncthing@myuser.service
+
+http://localhost:8384
+
