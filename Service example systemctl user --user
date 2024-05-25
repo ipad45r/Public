@@ -1,0 +1,11 @@
+Enabling and starting : 
+systemctl --user enable --now {name}.service
+
+Restart : 
+systemctl --user restart {name}.service
+
+Stop : 
+systemctl --user stop {name}.service
+
+Stop and disable: 
+systemctl --user disable --now {name}.service (Remove service file after)
