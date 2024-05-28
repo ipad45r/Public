@@ -1,0 +1,7 @@
+7zip of a folder name yt_subs(date) of a directory of subs
+7z of no compression, split of 2000M
+optional can use -p<PassWord> to set password
+
+#!/bin/bash
+time_stamp=$(date +"%Y-%m-%d-%H.%M")
+7z a -t7z -m0=Copy -v2000m -mhe  "/01YT/ytsubs_${time_stamp}.7z" "/01YT/subs"
