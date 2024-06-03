@@ -1,0 +1,32 @@
+Sanba create and mount at vm fstab
+Step 1: create samba at the server, assuming we want to mount 2 hdd: hdd1 and hdd2
+nano /etc/samba/smb.conf
+
+[hdd1]
+    comment = hard disk1
+    path = /media/hdd1
+    browseable = yes
+    read only = no
+    guest ok = no
+    valid users = user
+
+[hdd2]
+    comment = hard disk2
+    path = /media/hdd2
+    browseable = yes
+    read only = no
+    guest ok = no
+    valid users = user
+
+sudo smbpasswd -a user
+systemctl restart smbd
+
+Step 2: mount at the client
+apt install samba-client cifs-utils
+
+To mount on fstab
+//192.168.0.100/shared_data /mnt/samba cifs username=myusername,password=mypassword,uid=1000,gid=1000 0 0
+
+Or 
+//192.168.0.100/hdd1 /mnt/hdd1 cifs username=userp1,password=***,noperm 0 0
+//192.168.0.100/hdd2 /mnt/hdd2 cifs username=userp1,password=***,noperm 0 0
