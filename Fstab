@@ -5,3 +5,6 @@ UUID="**" /media/hdd1 auto nosuid,nodev,nofail,x-gvfs-show,x-systemd.mount-timeo
 
 edit ** with real uuid
 timeout can be changed too
+
+exfat
+UUID="**" /media/hdd2 exfat users,exec,rw,suid,dev,atime,diratime,uid=1000,gid=1000,nofail,umask=000 0 0
