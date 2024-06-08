@@ -7,8 +7,8 @@ echo "deb https://apt.syncthing.net/ syncthing release" | sudo tee /etc/apt/sour
 
 sudo apt update
 
-syncthing --version
 sudo apt install syncthing
+syncthing --version
 
 2. Setup start automatically 
 sudo systemctl enable syncthing@myuser.service
