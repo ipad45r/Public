@@ -13,4 +13,6 @@ exfat 2
 UUID="**" /media/hdd2 exfat users,exec,rw,suid,dev,atime,diratime,uid=1000,gid=1000,nofail,umask=000 0 0
 
 both are working. exfat 1 tested working with hdd remove, boot still ok
-exfat 2 tested ok on vm
+exfat 2 tested ok on vm,
+exfat 1 only allow read and write by the uid and gid user, and thus non own user cannot access
+exfat 2 allow all user to access
