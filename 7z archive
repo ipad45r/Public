@@ -1,0 +1,3 @@
+7z a -t7z -m0=Copy -v2000m -mhe -p<Password> path/to/save.7z path/to/source/folder
+
+the script with split in 2000MB, with password Password 
