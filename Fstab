@@ -16,3 +16,6 @@ both are working. exfat 1 tested working with hdd remove, boot still ok
 exfat 2 tested ok on vm,
 exfat 1 only allow read and write by the uid and gid user, and thus non own user cannot access
 exfat 2 allow all user to access
+
+##########for Raspberry pi##############
+UUID="***" /media/hdd1 exfat defaults,uid=1000,rw,umask=000,nofail  0  0
