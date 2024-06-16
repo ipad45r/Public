@@ -1,0 +1,2 @@
+add below to add non admin account
+net localgroup "docker-users" "<user_name>" /add
