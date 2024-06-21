@@ -1,0 +1,4 @@
+
+SSH into remote, run command and quickly exit
+
+ssh -t user@ip 'nohup script.sh & '
