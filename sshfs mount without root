@@ -1,0 +1,1 @@
+sshfs -o default_permissions,identityfile=/home/user/.ssh/ssh_key user@ip:/media/hdd2 ~/mounthdd2
