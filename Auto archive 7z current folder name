@@ -1,0 +1,12 @@
+CURRENT=`pwd`
+BASENAME=`basename "$CURRENT"`
+
+echo "$BASENAME"
+
+Then 7z a "$BASENAME.7z" "pwd"
+
+CURRENT="/storage/emulated/0/Wo/2/"
+CURRENTUP="/storage/emulated/0/Wo/1"
+BASENAME=`basename "$CURRENT"`
+
+7z a -t7z -m0=Copy -v2000m "$CURRENTUP/$BASENAME.7z" $CURRENT
