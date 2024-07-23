@@ -1,0 +1,10 @@
+when you install pihole systemwide, and tailscale, localhost might encounter internet problem
+this is due to system is using magicdns
+you need to edit resolv.conf
+
+to edit
+sudo nano /etc/resolv.conf
+
+add second nameserver after tailnet
+
+nameserver 127.0.0.1
