@@ -1,0 +1,4 @@
+Correct the time format on windows
+
+Windows 11 Date & Time Registry Edit Command:
+reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /d 1 /t REG_DWORD /f
