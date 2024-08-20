@@ -1,0 +1,4 @@
+#compress photo using ffmpeg, tested using linux, make sure to input cd to path of photo before compressing
+
+for a in *.jpg; 
+do ffmpeg -i "$a" -q:v 8 -vf unsharp=5:5:1.0:5:5:0.0 "converted/${a%.*}_conv.jpg"; done
