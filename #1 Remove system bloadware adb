@@ -1,0 +1,12 @@
+#make sure adb and usb debugging is enable
+adb shell
+
+# list all packages
+cmd package list packages
+
+pm uninstall -k --user 0 <package-name>
+# -k : Keep the data and cache directories around after package removal.
+# --user 0: The user to disable
+
+example
+pm uninstall -k --user 0 com.xiaomi.mipicks
