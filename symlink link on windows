@@ -1,0 +1,3 @@
+##make sure to run in privilledge mode
+
+mklink /D symlink original path
