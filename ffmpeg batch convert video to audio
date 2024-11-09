@@ -1,0 +1,25 @@
+@echo off
+
+setlocal enabledelayedexpansion
+
+rem Set input and output directories
+set "input_dir=path\to\input"
+set "output_dir=path\to\output"
+
+rem Create output directory if it doesn't exist
+if not exist "%output_dir%" (
+    mkdir "%output_dir%"
+
+)
+
+rem Loop through all video files in the input directory
+for %%f in ("%input_dir%\*.mp4" "%input_dir%\*.mkv" "%input_dir%\*.avi" "%input_dir%\*.mov" "%input_dir%\*.wmv") do (
+    rem Get the filename without the extension
+    set "filename=%%~nf"
+    rem Convert video to audio, copying the audio codec
+    ffmpeg -i "%%f" -vn -c:a copy "!output_dir!\!filename!.m4a"
+)
+
+echo Conversion complete!
+pause
+endlocal
