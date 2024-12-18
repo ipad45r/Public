@@ -1,0 +1,29 @@
+# Here's a sample Bash script (rclone_copy.sh) that loads the password from password.txt and runs the rclone copy command:
+
+#!/bin/bash
+
+# Load the password from password.txt
+PASSWORD=$(< /path/to/password.txt)  # Change this to the path of your password.txt
+
+# Export the password to the environment variable
+export RCLONE_CONFIG_PASS="$PASSWORD"
+
+# Define source and destination
+SOURCE="/path/to/source/*"  # Change this to your source directory
+DESTINATION="remote:destination"  # Change this to your rclone remote destination
+
+# Run rclone copy command
+rclone copy "$SOURCE" "$DESTINATION" --log-file="/path/to/rclone.log" --log-level=INFO
+
+# Check for errors
+if [ $? -ne 0 ]; then
+    echo "An error occurred during the rclone copy operation. Check the log file for details." >> /path/to/rclone.log
+else
+    echo "Rclone copy completed without errors." >> /path/to/rclone.log
+fi
+
+
+
+#Password Security: Ensure that the password.txt file is secure and not accessible by unauthorized users. You can set the permissions to restrict access:
+
+#$ chmod 600 /path/to/password.txt
