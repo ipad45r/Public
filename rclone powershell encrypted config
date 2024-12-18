@@ -1,0 +1,31 @@
+# Load the password from password.txt
+$password = Get-Content -Path "@@@@@@@@"  # Change this to the path of your password.txt
+
+# Export the password to the environment variable
+$env:RCLONE_CONFIG_PASS = $password
+
+# Define source and destination
+$source = "@@@@"  # Change this to your source directory
+$destination = "remote:destination"  # Change this to your rclone remote destination
+
+# Define custom config file path
+$configFilePath = "@@@@@@@"  # Change this to your custom rclone config path
+
+# Define log file path
+$logFile = "@@@@@@@@.log"  # Change this to your desired log file path
+
+# Create or clear the log file
+if (Test-Path $logFile) {
+    Clear-Content $logFile
+} else {
+    New-Item -Path $logFile -ItemType File
+}
+
+# Run rclone copy command and log the output
+try {
+    & rclone copy $source $destination --config=$configFilePath --log-file=$logFile --log-level=INFO
+    Write-Host "Copy completed successfully. Check the log file at: $logFile"
+} catch {
+    Write-Host "An error occurred: $_"
+    Add-Content -Path $logFile -Value "Error: $_"
+}
