@@ -1,0 +1,17 @@
+#archiving video of 720p and write record of downloaded files in text
+
+resolution=720
+link_input="ytinput720.txt"
+output_path="/path/to/path"
+output_format="%(channel)s/%(upload_date)s_%(title)s.%(id)s.$resolution.%(ext)s"
+archive_file="myarchive.txt"
+
+yt-dlp \
+-f "bv*[height=$resolution]+ba" \
+-a "$link_input" \
+--write-sub  --sub-langs "en" --write-auto-sub --convert-subs srt \
+--embed-thumbnail --embed-metadata --embed-chapters  --no-mtime \
+--restrict-filenames \
+--download-archive $archive_file   \
+-P $output_path \
+-o "$output_format"
