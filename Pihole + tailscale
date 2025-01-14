@@ -12,3 +12,14 @@ nameserver 127.0.0.1
 
 to make subnet router work
 sudo tailscale up --advertise-routes=192.168.0.0/24,pihole/32 --accept-dns=false --advertise-exit-node
+
+setup firewall sudo ufw allow OpenSSH
+sudo ufw allow 53
+sudo ufw allow 80
+sudo ufw allow 5335
+sudo ufw allow in on tailscale0 to any
+sudo ufw default deny incoming
+
+sudo tailscale up
+
+sudo tailscale set --advertise-routes=
