@@ -1,0 +1,29 @@
+Step 1 : Create invisible script. name it invi.vbs
+
+contents as below
+
+CreateObject("Wscript.Shell").Run """" & WScript.Arguments(0) & """", 0, False
+
+Step 2
+Create the script as *.bat
+
+step 3
+create task schedule
+
+action:
+under 
+Program/script type
+wscript.exe
+then arguments
+"path\to\invi.vbs" "path\to\script"
+example
+"C:\auto\invi.vbs" "C:\auto\rclone_nppnvme.bat"
+
+General
+run only when user is logged on
+
+Triggers:
+At log on
+at repeat if needed
+
+
