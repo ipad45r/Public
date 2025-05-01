@@ -1,0 +1,90 @@
+#rclone as a systemd move file
+#not yet tested
+
+✅ 1. Save Script in User's Directory
+
+Save the script in your home directory, for example:
+
+nano ~/bin/rclone_move.sh
+
+Paste the same script, but adjust the paths:
+
+#!/bin/bash
+set -e
+
+LOCKFILE="/tmp/rclone_move.lock"
+RCLONE="/usr/bin/rclone"
+LOGFILE="$HOME/.local/logs/rclone_move.log"
+SRC="$HOME/dl"
+DST="up:"
+
+mkdir -p "$(dirname "$LOGFILE")"
+
+if [ -e "$LOCKFILE" ]; then
+    echo "Script is already running."
+    exit 1
+fi
+
+trap "rm -f $LOCKFILE" EXIT
+touch "$LOCKFILE"
+
+"$RCLONE" move "$SRC" "$DST" --transfers=2 --log-level=INFO --log-file="$LOGFILE"
+
+✅ 2. Create User systemd Service
+
+Create the directory if it doesn't exist:
+
+mkdir -p ~/.config/systemd/user
+
+Then create the service file:
+
+nano ~/.config/systemd/user/rclone-move.service
+
+Paste:
+
+[Unit]
+Description=User Rclone Move Script
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/bin/rclone_move.sh
+Nice=10
+
+
+✅ 3. Create User Timer
+
+nano ~/.config/systemd/user/rclone-move.timer
+
+Paste:
+
+[Unit]
+Description=Run Rclone Move Every 4 Hours (User Timer)
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=4h
+Persistent=true
+
+[Install]
+WantedBy=default.target
+
+
+✅ 5. Optional: Start user systemd on login
+
+If you're using a desktop session, your systemd --user instance should start automatically.
+
+If not (e.g., in minimal shells or servers), add this to your .bash_profile or equivalent:
+
+systemctl --user start default.target
+
+✅ 6. Check Status and Logs (User Mode)
+
+List user timers:
+
+systemctl --user list-timers
+
+View service logs:
+
+journalctl --user -u rclone-move.service
