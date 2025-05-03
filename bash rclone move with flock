@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# CONFIGURATION
+SOURCE="$1"            # First argument: source path
+DESTINATION="$2"       # Second argument: destination path
+LOGFILE="$HOME/rclone_transfer.log"
+LOCKFILE="/tmp/rclone_move.lock"
+
+# Ensure source and destination are provided
+if [[ -z "$SOURCE" || -z "$DESTINATION" ]]; then
+  echo "Usage: $0 <source> <destination>"
+  exit 1
+fi
+
+# Use flock for locking
+(
+  flock -n 9 || { echo "Another instance is running. Exiting..."; exit 1; }
+
+  echo "[$(date)] Starting rclone move from $SOURCE to $DESTINATION" >> "$LOGFILE"
+
+  rclone move "$SOURCE" "$DESTINATION" \
+    --transfers=2 \
+    --log-file="$LOGFILE" \
+    --log-level=INFO
+
+  echo "[$(date)] Transfer complete." >> "$LOGFILE"
+
+) 9>"$LOCKFILE"
