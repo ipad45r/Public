@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # CONFIGURATION
-SOURCE="$1"            # First argument: source path
-DESTINATION="$2"       # Second argument: destination path
+SOURCE="path/to/source"            # First argument: source path
+DESTINATION="path/to/destination"       # Second argument: destination path
 LOGFILE="$HOME/rclone_transfer.log"
 LOCKFILE="/tmp/rclone_move.lock"
 
@@ -26,3 +26,5 @@ fi
   echo "[$(date)] Transfer complete." >> "$LOGFILE"
 
 ) 9>"$LOCKFILE"
+
+
