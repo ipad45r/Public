@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Array of repositories, their mount points, and their password files
+declare -A REPOS=(
+    ["/path/to/repo1"]="/mnt/restic_repo1"
+    ["/path/to/repo2"]="/mnt/restic_repo2"
+)
+
+declare -A PASSWORDS=(
+    ["/path/to/repo1"]="/path/to/repo1-password.txt"
+    ["/path/to/repo2"]="/path/to/repo2-password.txt"
+)
+
+# Loop through each repo and mount it
+for REPO in "${!REPOS[@]}"; do
+    MOUNT_POINT="${REPOS[$REPO]}"
+    PASSWORD_FILE="${PASSWORDS[$REPO]}"
+
+    # Ensure mount point exists
+    mkdir -p "$MOUNT_POINT"
+
+    # Check if already mounted
+    if mount | grep -q "$MOUNT_POINT"; then
+        echo "$REPO is already mounted"
+        continue
+    fi
+
+    # Export environment variables for the specific repo
+    export RESTIC_REPOSITORY="$REPO"
+    export RESTIC_PASSWORD_FILE="$PASSWORD_FILE"
+
+    # Mount the repository (run in background)
+    restic mount "$MOUNT_POINT" &
+
+    # Optionally, you can include some delay or logging here for better management
+done
+
+# Wait for all background mount processes to finish
+wait
+===============================
+
+Make sure the script is executable
+chmod +x /home/yourusername/mount_all_restic.sh
+================
+Now, create a systemd service for this script at ~/.config/systemd/user/restic-all-repos.service
+======================
+
+[Unit]
+Description=Mount All Restic Repositories
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/yourusername/mount_all_restic.sh
+ExecStop=/bin/fusermount -u /mnt/restic_repo1 /mnt/restic_repo2
+Restart=on-failure
+User=$(whoami)
+Group=$(id -gn)
+
+[Install]
+WantedBy=default.target
+=============================
+Reload systemd to recognize the new service and start it:
+
+systemctl --user daemon-reload
+systemctl --user enable --now restic-all-repos.service
+
+=============
+Or check the logs:
+journalctl --user -u restic-all-repos.service
+
+
