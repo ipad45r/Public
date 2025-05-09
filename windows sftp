@@ -1,0 +1,4 @@
+mount sftp on windows
+
+use sshfs
+\\sshfs\user@myraspi.cp\..\..\media
