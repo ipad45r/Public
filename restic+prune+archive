@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Restic environment
+export RESTIC_REPOSITORY="/srv/restic-repo"
+export RESTIC_PASSWORD="your-password"
+
+# Perform backup
+/usr/bin/restic backup /home/your-user/data
+
+# Optional: Log timestamp
+echo "Backup completed on $(date)"
+
+#####
+#prune
+#####
+
+#!/bin/bash
+
+# Restic environment
+export RESTIC_REPOSITORY="/srv/restic-repo"
+export RESTIC_PASSWORD="your-password"
+
+# Forget and prune: keep last 4 and anything from the past 30 days
+/usr/bin/restic forget --keep-last 4 --keep-within 30d --prune
+
+# Optional: Log timestamp
+echo "Prune completed on $(date)"
+
+### archive 7z ###
+
+#!/bin/bash
+
+export DATE=$(date +%F)
+export REPO="/srv/restic-repo"
+export DEST="/srv/restic-archives"
+export ARCHIVE_NAME="restic-backup-${DATE}.7z"
+
+# Unlock the repo (in case of leftover locks)
+/usr/bin/restic unlock --repo "$REPO"
+
+# Optional: Check repo health (slow, but safe)
+/usr/bin/restic check --repo "$REPO"
+
+# Create 7z archive with NO compression and split into 2 GB parts
+/usr/bin/7z a -t7z -mx=0 -v2000m "$DEST/$ARCHIVE_NAME" "$REPO"
+
+# Optional: Log timestamp
+echo "7z archive completed on $(date)"
