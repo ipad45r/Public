@@ -1,1 +1,7 @@
 ssh-keygen -t ed25519 -f ~/.ssh/your-key-filename -C "your-key-comment"
+
+ssh-keygen -t ed25519 -a 200 -C "comment"
+
+advance
+https://www.youtube.com/watch?v=pE3EuiyShoM
+
