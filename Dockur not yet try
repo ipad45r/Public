@@ -1,0 +1,24 @@
+version: '3'
+services:
+  windows:
+    image: dockurr/windows:latest
+    container_name: windows
+    environment:
+      VERSION: "11e" # Windows 11 Enterprise, closest match for IoT Enterprise LTSC
+      RAM_SIZE: "4G" # Meets IoT LTSC’s 2GB minimum
+      CPU_CORES: "2" # Meets IoT LTSC’s 2-core minimum
+      DISK_SIZE: "16G" # Meets IoT LTSC’s 16GB minimum
+    ports:
+      - 8006:8006 # Web interface
+      - 3399:3389/tcp # RDP
+      - 3399:3389/udp # RDP
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./windows:/storage # Persistent VM data
+      - /media/hdd2/iso/win11iot-ltsc.iso:/boot.iso:ro # Custom ISO
+      - ./windows/autounattend.xml:/unattended.xml:ro # Unattended answer file with privacy settings
+    stop_grace_period: 2m
