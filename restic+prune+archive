@@ -42,7 +42,7 @@ export ARCHIVE_NAME="restic-backup-${DATE}.7z"
 /usr/bin/restic check --repo "$REPO"
 
 # Create 7z archive with NO compression and split into 2 GB parts
-/usr/bin/7z a -t7z -mx=0 -v2000m "$DEST/$ARCHIVE_NAME" "$REPO"
+/usr/bin/7z a -t7z -mx=0 -v1999m "$DEST/$ARCHIVE_NAME" "$REPO"
 
 # Optional: Log timestamp
 echo "7z archive completed on $(date)"
