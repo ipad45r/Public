@@ -14,7 +14,7 @@ services:
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
       - TS_EXTRA_ARGS=--accept-dns=true
-      #- TS_SERVE_PORT=80            # expose Vaultwarden via Tailscale Serve
+      - TS_SERVE_PORT=80            # expose Vaultwarden via Tailscale Serve
       #- TS_SERVE_MODE=funnel        # enable Funnel for public access
     volumes:
       - ./tailscale-state:/var/lib/tailscale
@@ -39,7 +39,7 @@ services:
     volumes:
       - ./vw-data:/data
     environment:
-      - DOMAIN=https://ts-vault.${TAILNET_NAME}.ts.net  # Funnel / MagicDNS URL
+      - DOMAIN=https://ts-vault.${TAILNET_NAME}.ts.net  # Funnel / MagicDNS URL change this if env file doesnt work
       - WEBSOCKET_ENABLED=true
       - SIGNUPS_ALLOWED=false
       - ROCKET_PORT=80
