@@ -1,0 +1,46 @@
+#### note : please enable tailscale serve at port 80 to enable LTS on tailnet ###
+### docker  exec -it tailscale-vault tailscale serve --bg 80#### <---- turn on
+### docker  exec -it tailscale-vault tailscale serve --https=80 off <--- off
+### for funnel use port 443 ####
+
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale-vault
+    hostname: ts-vault
+    restart: unless-stopped
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_EXTRA_ARGS=--accept-dns=true
+      #- TS_SERVE_PORT=80            # expose Vaultwarden via Tailscale Serve
+      #- TS_SERVE_MODE=funnel        # enable Funnel for public access
+    volumes:
+      - ./tailscale-state:/var/lib/tailscale
+      - ./vw-data:/data
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
+    command: tailscaled
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    network_mode: service:tailscale   # shares network with Tailscale
+    depends_on:
+      - tailscale
+    volumes:
+      - ./vw-data:/data
+    environment:
+      - DOMAIN=https://ts-vault.${TAILNET_NAME}.ts.net  # Funnel / MagicDNS URL
+      - WEBSOCKET_ENABLED=true
+      - SIGNUPS_ALLOWED=false
+      - ROCKET_PORT=80
+      - ROCKET_LOG_LEVEL=debug
