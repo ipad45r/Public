@@ -1,0 +1,69 @@
+#### This is the compose script for the container I want to funnel:
+
+services:
+  bitwarden:
+    image: vaultwarden/server:latest
+    container_name: Bitwarden
+    network_mode: "bridge"
+    environment:
+      - TZ=Europe/Berlin
+      - ADMIN_TOKEN=<censored token>
+    volumes:
+      - /volume1/docker/Bitwarden:/data
+    ports:
+      - 3012:3012
+      - 5151:80
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: "bitwarden"
+      tsdproxy.ephemeral: "true"
+      tsdproxy.funnel: "true"
+    restart: always
+
+####And here's my TsDProxy compose script:
+defaultproxyprovider: default
+docker:
+    local:
+        host: unix:///var/run/docker.sock
+        targethostname: 100.125.102.121
+        defaultproxyprovider: default
+files: {}
+tailscale:
+    providers:
+        default:
+            authkey: <censored authkey>
+            authkeyfile: ""
+            controlurl: https://controlplane.tailscale.com
+    datadir: /data/
+http:
+    hostname: 0.0.0.0
+    port: 8080
+log:
+    level: info
+    json: false
+proxyaccesslog: true
+
+
+#### This is the tsdproxy.yaml file as requested:
+
+defaultproxyprovider: default
+docker:
+    local:
+        host: unix:///var/run/docker.sock
+        targethostname: 100.125.102.121
+        defaultproxyprovider: default
+files: {}
+tailscale:
+    providers:
+        default:
+            authkey: <censored authkey>
+            authkeyfile: ""
+            controlurl: https://controlplane.tailscale.com
+    datadir: /data/
+http:
+    hostname: 0.0.0.0
+    port: 8080
+log:
+    level: info
+    json: false
+proxyaccesslog: true
