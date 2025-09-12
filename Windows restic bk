@@ -1,12 +1,16 @@
-# ================================
-# Restic Backup Script for Windows
-# ================================
+# ======================================================
+# Restic Backup Script for Windows (fixed --exclude bug)
+# ======================================================
 
-# --- Configuration ---
-$env:RESTIC_REPOSITORY="sftp:user@server:/backups/windows"   # Change to your repo
-$env:RESTIC_PASSWORD_FILE="C:\restic\restic-pw.txt"          # Store password securely
+# --------------- CONFIG ----------------
+# Change these to match your repo / password file
+$env:RESTIC_REPOSITORY = "sftp:user@server:/backups/windows"
+$env:RESTIC_PASSWORD_FILE = "C:\restic\restic-pw.txt"
 
-# Backup Sources
+# Restic executable name (assumes restic is in PATH)
+$resticExe = "restic"
+
+# Paths to back up (edit as needed)
 $backupPaths = @(
     "$env:USERPROFILE\Documents",
     "$env:USERPROFILE\Pictures",
@@ -15,32 +19,70 @@ $backupPaths = @(
     "$env:LOCALAPPDATA\Google\Chrome\User Data"
 )
 
-# Exclude patterns (temp files, cache, etc.)
+# Exclude patterns (use --exclude for each pattern)
 $excludePatterns = @(
-    "--iexclude Cache",
-    "--iexclude Code Cache",
-    "--iexclude GPUCache",
-    "--iexclude *.tmp",
-    "--iexclude *.log"
+    "Cache",
+    "Code Cache",
+    "GPUCache",
+    "*.tmp",
+    "*.log"
 )
 
-# Join excludes into one string
-$excludeArgs = $excludePatterns -join " "
+# --------------- SCRIPT ----------------
+Write-Host "=== Restic Windows backup started: $(Get-Date) ==="
 
-# --- Run Backup ---
-Write-Host "=== Starting Restic Backup ($(Get-Date)) ==="
+# Ensure restic exists
+try {
+    $null = & $resticExe version 2>&1
+} catch {
+    Write-Error "Cannot execute '$resticExe'. Make sure Restic is installed and in PATH."
+    exit 1
+}
 
-foreach ($path in $backupPaths) {
-    if (Test-Path $path) {
-        Write-Host "Backing up: $path"
-        restic backup "$path" --use-fs-snapshot $excludeArgs
+# Collect only existing paths so restic doesn't fail on missing dirs
+$pathsToBackup = @()
+foreach ($p in $backupPaths) {
+    if (Test-Path $p) {
+        $pathsToBackup += $p
     } else {
-        Write-Host "Skipping missing path: $path"
+        Write-Host "Skipping missing path: $p"
     }
 }
 
-# --- Apply Retention Policy ---
-Write-Host "=== Applying Retention Policy ==="
-restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
+if ($pathsToBackup.Count -eq 0) {
+    Write-Host "No valid backup paths found. Exiting."
+    exit 0
+}
 
-Write-Host "=== Backup Completed ($(Get-Date)) ==="
+# Build argument array for restic
+# We call: restic backup <path1> <path2> ... --use-fs-snapshot --exclude <pat> --exclude <pat> ...
+$args = @('backup') + $pathsToBackup + @('--use-fs-snapshot')
+foreach ($pat in $excludePatterns) {
+    $args += '--exclude'
+    $args += $pat
+}
+
+# Show command summary (sanitized)
+Write-Host "Running restic with the following paths:"
+$pathsToBackup | ForEach-Object { Write-Host "  $_" }
+Write-Host "Exclude patterns: $($excludePatterns -join ', ')"
+Write-Host "Starting backup..."
+
+# Run backup
+& $resticExe @args
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "restic backup failed (exit code $LASTEXITCODE). Check output above."
+    exit $LASTEXITCODE
+}
+
+# Retention: adjust numbers if you want different policy
+Write-Host "Applying retention policy (forget + prune)..."
+$forgetArgs = @('forget', '--keep-daily', '7', '--keep-weekly', '4', '--keep-monthly', '6', '--prune')
+& $resticExe @forgetArgs
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "restic forget/prune failed (exit code $LASTEXITCODE)."
+    exit $LASTEXITCODE
+}
+
+Write-Host "=== Backup completed successfully: $(Get-Date) ==="
+exit 0
