@@ -1,0 +1,71 @@
+# Restic Hybrid Backup Script: Includes + Excludes for Windows
+# Run as Admin. Focuses on essentials, excludes bloat.
+
+# Configuration
+$RestricExe = "C:\restic\restic.exe"
+$RepoPath = "D:\backups\restic-repo"
+$LogPath = "C:\restic\logs"
+$SuccessLog = "$LogPath\hybrid-backup-success-$(Get-Date -Format 'yyyy-MM-dd-HH-mm-ss').log"
+$ErrorLog = "$LogPath\hybrid-backup-error-$(Get-Date -Format 'yyyy-MM-dd-HH-mm-ss').log"
+$ExcludeFile = "C:\restic\excludes.txt"  # Create this file with patterns below
+
+# Essential includes (as before)
+$BackupIncludes = @(
+    "C:\Users\$env:USERNAME\Documents/**",
+    "C:\Users\$env:USERNAME\Desktop/**",
+    # ... (browser specifics like "C:\Users\$env:USERNAME\AppData\Roaming\Mozilla\Firefox\Profiles\*\places.sqlite")
+)
+
+# In-file exclusions (write to $ExcludeFile)
+$ExcludePatterns = @(
+    # System/Temp
+    "C:\Windows\Temp",
+    "C:\Users\*\AppData\Local\Temp",
+    "C:\$Recycle.Bin",
+    "C:\hiberfil.sys",
+    "C:\pagefile.sys",
+    "*.tmp",
+    "Thumbs.db",
+    "desktop.ini",
+
+    # Browser caches
+    "C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\cache2/**",
+    "C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Cache/**",
+    "C:\Users\*\AppData\Local\Microsoft\Edge\User Data\*\Code Cache/**",
+
+    # Other
+    "**/*.log",
+    "--exclude-larger-than=1G"
+)
+$ExcludePatterns | Out-File -FilePath $ExcludeFile -Encoding utf8
+
+# Maintenance settings (unchanged)
+$KeepDaily = 7
+$KeepWeekly = 4
+$KeepMonthly = 12
+
+# Logging functions (same as before)
+function Write-Log { param([string]$Message, [string]$LogFile); $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"; "$Timestamp - $Message" | Tee-Object -FilePath $LogFile -Append; Write-Host $Message }
+function Invoke-Restic { param([string[]]$Arguments); $fullArgs = @("-r", $RepoPath) + $Arguments; Write-Log "Running: $RestricExe $($fullArgs -join ' ')" $SuccessLog; & $RestricExe @fullArgs 2>&1 | Tee-Object -FilePath $SuccessLog -Append; return ($LASTEXITCODE -eq 0) }
+
+# Main
+try {
+    $backupArgs = @("backup", "--use-fs-snapshot", "--verbose", "--iexclude-file=$ExcludeFile", "--tag=hybrid-backup", "-x")  # -x for one-file-system
+    $backupArgs += $BackupIncludes
+    $backupSuccess = Invoke-Restic $backupArgs
+    if (-not $backupSuccess) { throw "Backup failed" }
+
+    Invoke-Restic @("stats", "latest") | Tee-Object -FilePath $SuccessLog -Append
+
+    if ($backupSuccess) {
+        Write-Log "Running maintenance..." $SuccessLog
+        Invoke-Restic @("forget", "--keep-daily=$KeepDaily", "--keep-weekly=$KeepWeekly", "--keep-monthly=$KeepMonthly", "--prune")
+        Invoke-Restic @("check")
+    }
+
+    Write-Log "Hybrid backup completed." $SuccessLog
+
+} catch {
+    Write-Log "Error: $($_.Exception.Message)" $ErrorLog
+    exit 1
+}
