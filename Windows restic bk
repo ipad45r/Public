@@ -1,0 +1,46 @@
+# ================================
+# Restic Backup Script for Windows
+# ================================
+
+# --- Configuration ---
+$env:RESTIC_REPOSITORY="sftp:user@server:/backups/windows"   # Change to your repo
+$env:RESTIC_PASSWORD_FILE="C:\restic\restic-pw.txt"          # Store password securely
+
+# Backup Sources
+$backupPaths = @(
+    "$env:USERPROFILE\Documents",
+    "$env:USERPROFILE\Pictures",
+    "$env:USERPROFILE\Desktop",
+    "$env:APPDATA\Mozilla\Firefox\Profiles",
+    "$env:LOCALAPPDATA\Google\Chrome\User Data"
+)
+
+# Exclude patterns (temp files, cache, etc.)
+$excludePatterns = @(
+    "--iexclude Cache",
+    "--iexclude Code Cache",
+    "--iexclude GPUCache",
+    "--iexclude *.tmp",
+    "--iexclude *.log"
+)
+
+# Join excludes into one string
+$excludeArgs = $excludePatterns -join " "
+
+# --- Run Backup ---
+Write-Host "=== Starting Restic Backup ($(Get-Date)) ==="
+
+foreach ($path in $backupPaths) {
+    if (Test-Path $path) {
+        Write-Host "Backing up: $path"
+        restic backup "$path" --use-fs-snapshot $excludeArgs
+    } else {
+        Write-Host "Skipping missing path: $path"
+    }
+}
+
+# --- Apply Retention Policy ---
+Write-Host "=== Applying Retention Policy ==="
+restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
+
+Write-Host "=== Backup Completed ($(Get-Date)) ==="
