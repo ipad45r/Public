@@ -1,0 +1,9 @@
+# Tailscale
+TSDPROXY_AUTHKEY=tskey-auth-k #### get from tailscale admin page -->keys
+
+# Vaultwarden
+VW_SIGNUPS_ALLOWED=true ### change to false after sign up
+VW_WEBSOCKET_ENABLED=true
+VW_ADMIN_TOKEN=yourpassword ##change to more secure
+
+TSD_HOST_IP=## ip of the hostname, vm on machine page of tailscale machine
