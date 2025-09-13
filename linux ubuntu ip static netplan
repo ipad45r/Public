@@ -1,0 +1,19 @@
+sudo nano /etc/netplan/50-cloud-init.yaml
+
+
+network:
+  version: 2
+  ethernets:
+    ens18:
+      dhcp4: no
+      addresses:
+        - 192.168.0.102/24 ## change this 
+
+
+save and
+sudo netplan apply
+
+sudo apt install isc-dhcp-client
+sudo dhclient
+sudo dhclient -r
+
