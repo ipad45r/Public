@@ -1,0 +1,9 @@
+lsblk
+df -h
+
+## grow sda2
+sudo growpart /dev/sda 2 
+sudo resize2fs /dev/sda2  
+
+df -h 
+again to confirm
