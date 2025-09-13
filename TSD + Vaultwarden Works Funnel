@@ -1,0 +1,37 @@
+services:
+
+  ## tsdproxy
+  tsdproxy:
+    image: almeidapaulopt/tsdproxy:latest
+    container_name: tsdproxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - tsdproxydata:/data
+    environment:
+      # Get AuthKey from your Tailscale account
+      - TSDPROXY_AUTHKEY=${TSDPROXY_AUTHKEY}
+      # Address of docker server (access to example.com ports)
+      - TSDPROXY_HOSTNAME=${TSD_HOST_IP}
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    restart: unless-stopped
+
+  ## Vaultwarden
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    environment:
+      - SIGNUPS_ALLOWED=${VW_SIGNUPS_ALLOWED}
+      - ADMIN_TOKEN=${VW_ADMIN_TOKEN}
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: "vaultwd"
+      tsdproxy.funnel: "true"
+      tsdproxy.ephemeral: "true"       ## true --> funnel to internet. make sure to use "sudo tailscale funnel --bg 443"  To disable sudo tailscale funnel --https=443 off
+    ports:
+      - 8081:80  ####change this
+    volumes:
+      - ./vw-data:/data
+    restart: unless-stopped
+
+volumes:
+  tsdproxydata:
