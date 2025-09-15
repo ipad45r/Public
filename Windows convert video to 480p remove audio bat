@@ -1,0 +1,16 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM Create output folder if not exists
+if not exist "480p" (
+    mkdir "480p"
+)
+
+REM Loop through all mp4, mkv, avi, mov files in the folder
+for %%a in (*.mp4 *.mkv *.avi *.mov) do (
+    echo Converting: %%a
+    ffmpeg -i "%%a" -vf scale=-2:480 -an -c:v libx264 -crf 23 -preset fast "480p\%%~na_480p.mp4"
+)
+
+echo Done! Files saved in folder 480p
+pause
