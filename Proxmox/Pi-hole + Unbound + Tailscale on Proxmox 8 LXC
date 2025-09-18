@@ -1,0 +1,46 @@
+Pi-hole + Unbound + Tailscale on Proxmox 8 LXC
+1️⃣ LXC Creation (Proxmox 8)
+
+Template: Debian 12 (latest)
+
+Container ID: 450
+
+Hostname: pihole
+
+Cores: 1
+
+RAM: 700 MB
+
+Swap: 256 MB
+
+Rootfs: 16 GB (local-lvm)
+
+Network: Static LAN IP, e.g., 192.168.1.50/24
+
+Gateway: 192.168.1.1
+
+Privileged: optional (0 = privileged, 1 = unprivileged)
+
+Features: Nesting enabled (features: nesting=1)
+
+LXC Config (450.conf) Example
+
+
+arch: amd64
+cores: 1
+hostname: pihole
+memory: 700
+swap: 256
+net0: name=eth0,bridge=vmbr0,ip=192.168.1.50/24,gw=192.168.1.1
+ostype: debian
+rootfs: local-lvm:16
+features: nesting=1
+
+# Required for Tailscale in unprivileged LXC
+lxc.cgroup2.devices.allow: c 10:200 rwm
+lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
+
+
+
+Update OS
+Update OS
