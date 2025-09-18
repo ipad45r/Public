@@ -1,0 +1,7 @@
+qm importdisk <VMID> <path-to-image> <storage>
+
+qm importdisk 101 /var/lib/vz/images/100/haos_ova-16.2.rc1.qcow2 local
+
+
+qm importdisk 101 /path/to/disk.vmdk local --format qcow2
+qm importdisk 101 /path/to/disk.qcow2 local --size 20G
