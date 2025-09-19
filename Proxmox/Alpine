@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Minimal bash script to create LXC 450 with Tailscale on Proxmox VE
+# Run as root on Proxmox host. Adjust vars if needed.
+# Assumptions: Storage 'local' for templates, 'local-lvm' for rootfs; bridge vmbr0; gw 192.168.0.1
+# Interactive steps: Set password during create; auth Tailscale after install.
+
+set -e  # Exit on error
+
+CTID=450
+HOSTNAME="ts-minimal"
+TEMPLATE="alpine-3.20-default_20240618_amd64.tar.xz"  # Update if newer available
+ROOTFS_SIZE=4  # GB
+CORES=1
+MEMORY=256  # MB
+SWAP=256  # MB
+IP="192.168.0.33/24"
+GW="192.168.0.1"
+BRIDGE="vmbr0"
+
+# 1. Update and download template if needed
+pveam update
+pveam available | grep -q alpine || pveam download local "$TEMPLATE"
+
+# 2. Create container
+pct create "$CTID" "local:vztmpl/$TEMPLATE" \
+  --hostname "$HOSTNAME" \
+  --password changeme \
+  --net0 "name=eth0,bridge=$BRIDGE,ip=$IP,gw=$GW,type=veth" \
+  --rootfs "local-lvm:$ROOTFS_SIZE" \
+  --cores "$CORES" \
+  --memory "$MEMORY" \
+  --swap "$SWAP" \
+  --unprivileged 1 \
+  --features nesting=1
+
+# 3. Enable TUN for Tailscale
+pct stop "$CTID"
+cat >> "/etc/pve/lxc/$CTID.conf" << EOF
+lxc.cgroup2.devices.allow: c 10:200 rwm
+lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
+EOF
+pct start "$CTID"
+
+# 4. Install Tailscale inside container (non-interactive)
+pct exec "$CTID" -- bash -c "
+apk update && apk add tailscale &&
+rc-update add tailscale &&
+rc-service tailscale start
+"
+
+echo "Container $CTID created and Tailscale installed."
+echo "Manual steps:"
+echo "1. pct enter $CTID"
+echo "2. tailscale up  # Follow auth URL, then exit"
+echo "3. Verify: tailscale status; ip addr show tailscale0"
+echo "For userspace mode (no TUN edit): tailscale up --userspace=true"
