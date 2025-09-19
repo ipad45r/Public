@@ -1,0 +1,7 @@
+# Allow network control
+lxc.cgroup2.devices.allow: c 10:200 rwm
+lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
+
+# Allow sysctl for net.ipv4.ip_forward
+lxc.sysctl.net.ipv4.ip_forward=1
+lxc.sysctl.net.ipv6.conf.all.forwarding=1
