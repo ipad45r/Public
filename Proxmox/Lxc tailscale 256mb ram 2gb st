@@ -1,0 +1,48 @@
+#!/bin/bash
+# Proxmox helper script to create minimal Tailscale LXC (subnet router + exit node)
+
+CTID=450
+HOSTNAME="tailscale"
+STORAGE="local-lvm"
+IP="192.168.0.33/24"
+GW="192.168.0.1"
+BRIDGE="vmbr0"
+DISK_SIZE="2G"
+RAM="256"
+
+echo "[*] Creating Debian 12 container..."
+pct create $CTID local:vztmpl/debian-12-standard_12.2-1_amd64.tar.zst \
+  -hostname $HOSTNAME \
+  -storage $STORAGE \
+  -rootfs $STORAGE:$DISK_SIZE \
+  -memory $RAM \
+  -swap 0 \
+  -net0 name=eth0,bridge=$BRIDGE,ip=$IP,gw=$GW \
+  -unprivileged 1
+
+echo "[*] Setting features (nesting + tun)..."
+pct set $CTID -features nesting=1
+echo "lxc.cgroup2.devices.allow: c 10:200 rwm" >> /etc/pve/lxc/$CTID.conf
+echo "lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file" >> /etc/pve/lxc/$CTID.conf
+
+echo "[*] Starting container..."
+pct start $CTID
+sleep 5
+
+echo "[*] Installing dependencies + Tailscale..."
+pct exec $CTID -- bash -c "apt-get update && apt-get install -y curl iptables iproute2 iptables-persistent && curl -fsSL https://tailscale.com/install.sh | sh"
+
+echo "[*] Enabling IP forwarding..."
+pct exec $CTID -- bash -c "echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf"
+pct exec $CTID -- bash -c "echo 'net.ipv6.conf.all.forwarding=1' >> /etc/sysctl.conf"
+pct exec $CTID -- bash -c "sysctl -p"
+
+echo
+echo "=================================================="
+echo "Container $CTID ($HOSTNAME) is ready."
+echo "Now enter the container with: pct enter $CTID"
+echo "Then bring up Tailscale with something like:"
+echo "  tailscale up --advertise-exit-node --advertise-routes=192.168.0.0/24 --accept-dns=false"
+echo
+echo "After that, approve the routes + exit node in Tailscale admin panel."
+echo "=================================================="
