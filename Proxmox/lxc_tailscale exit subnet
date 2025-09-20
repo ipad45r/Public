@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# Script to create a minimal LXC container in Proxmox VE 8 for Tailscale subnet router + exit node
+# Run on the Proxmox host as root
+
+# Variables
+CTID=456       ### change this
+IP="192.168.0.36/24"      ### change this
+GW="192.168.0.1"
+TEMPLATE="local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"  ### check if exist download if needed
+STORAGE="local-lvm"
+HOSTNAME="lxc-tailscale-36"  ### change this
+DISK_SIZE="2"
+MEMORY="384"
+CORES="1"
+
+# Check if template exists
+if ! pveam list local | grep -q "$TEMPLATE"; then
+    echo "Template $TEMPLATE not found. Downloading..."
+    pveam update && pveam download local debian-12-standard_12.12-1_amd64.tar.zst
+fi
+
+# Create LXC container
+echo "Creating LXC container with ID $CTID..."
+pct create $CTID $TEMPLATE \
+    --hostname $HOSTNAME \
+    --storage $STORAGE \
+    --rootfs $DISK_SIZE \
+    --memory $MEMORY \
+    --cores $CORES \
+    --net0 name=eth0,bridge=vmbr0,ip=$IP,gw=$GW \
+    --features nesting=1 \
+    --unprivileged 1 \
+    --onboot 1
+
+# Add TUN device in LXC config
+echo "Enabling TUN device..."
+cat <<EOF >> /etc/pve/lxc/$CTID.conf
+lxc.cgroup2.devices.allow: c 10:200 rwm
+lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
+EOF
+
+# Start the container
+echo "Starting container $CTID..."
+pct start $CTID
+sleep 5
+
+# Install Tailscale and networkd-dispatcher
+echo "Installing Tailscale and UDP GRO fix..."
+pct exec $CTID -- bash -c "
+    apt update && apt install -y curl gnupg2 ethtool networkd-dispatcher
+
+    # Install Tailscale
+    curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+    curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list
+    apt update && apt install -y tailscale
+    systemctl enable --now tailscaled
+
+    # Enable IP forwarding
+    echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
+    echo 'net.ipv6.conf.all.forwarding=1' >> /etc/sysctl.conf
+    sysctl -p
+
+    # Configure UDP GRO forwarding fix
+    NETDEV=\$(ip -o route get 8.8.8.8 | cut -f 5 -d ' ')
+    ethtool -K \$NETDEV rx-udp-gro-forwarding on rx-gro-list off
+
+    cat > /etc/networkd-dispatcher/routable.d/50-tailscale <<'FIX'
+#!/bin/sh
+NETDEV=\$(ip -o route get 8.8.8.8 | cut -f 5 -d ' ')
+/sbin/ethtool -K \$NETDEV rx-udp-gro-forwarding on rx-gro-list off
+FIX
+
+    chmod 755 /etc/networkd-dispatcher/routable.d/50-tailscale
+"
+
+echo "Setup complete!"
+echo "Next steps:"
+echo "1. Enter container: pct enter $CTID"
+echo "2. Authenticate Tailscale with your auth key (from the admin console):"
+echo "   tailscale up --auth-key=tskey- --advertise-routes=192.168.0.0/24 --advertise-exit-node"
+echo "3. Approve in Tailscale admin console if required."
