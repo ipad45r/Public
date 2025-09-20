@@ -1,0 +1,108 @@
+#!/bin/bash
+# Proxmox VE 8 script to create a minimal LXC with Pi-hole + Unbound
+# Includes SSH, NTP, IPv6 disable
+# Run this on the Proxmox host as root
+
+# === Variables ===
+CTID=452
+IP="192.168.0.35/24"
+GW="192.168.0.1"
+TEMPLATE="local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+STORAGE="local-lvm"
+HOSTNAME="lxc-pihole-unbound"
+DISK_SIZE="2"     # GB
+MEMORY="512"      # MB
+CORES="1"
+
+# === Check template ===
+if ! pveam list local | grep -q "$TEMPLATE"; then
+    echo "[*] Template $TEMPLATE not found. Downloading..."
+    pveam update && pveam download local debian-12-standard_12.12-1_amd64.tar.zst
+fi
+
+# === Create LXC ===
+echo "[*] Creating LXC $CTID..."
+pct create $CTID $TEMPLATE \
+    --hostname $HOSTNAME \
+    --rootfs ${STORAGE}:${DISK_SIZE} \
+    --memory $MEMORY \
+    --cores $CORES \
+    --net0 name=eth0,bridge=vmbr0,ip=$IP,gw=$GW \
+    --features nesting=1 \
+    --unprivileged 1
+
+# === Start container ===
+pct start $CTID
+sleep 5
+
+# === Base setup ===
+echo "[*] Updating container and installing base packages..."
+pct exec $CTID -- bash -c "
+    apt update && apt upgrade -y
+    apt install -y curl dnsutils unbound ntp openssh-server
+"
+
+# === Disable IPv6 ===
+echo "[*] Disabling IPv6..."
+pct exec $CTID -- bash -c "
+    echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf
+    echo 'net.ipv6.conf.default.disable_ipv6 = 1' >> /etc/sysctl.conf
+    echo 'net.ipv6.conf.lo.disable_ipv6 = 1' >> /etc/sysctl.conf
+    sysctl -p
+"
+
+# === Enable SSH ===
+echo "[*] Enabling SSH with root login..."
+pct exec $CTID -- bash -c "
+    systemctl enable ssh
+    systemctl start ssh
+    sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+    systemctl restart ssh
+"
+
+# === Install Pi-hole ===
+echo "[*] Installing Pi-hole..."
+pct exec $CTID -- bash -c "
+    curl -sSL https://install.pi-hole.net | bash /dev/stdin --unattended
+"
+
+# === Configure Unbound ===
+echo "[*] Configuring Unbound..."
+pct exec $CTID -- bash -c "
+    cat > /etc/unbound/unbound.conf << 'EOF'
+server:
+    interface: 127.0.0.1
+    port: 5335
+    do-ip4: yes
+    do-ip6: no
+    do-udp: yes
+    do-tcp: yes
+    access-control: 127.0.0.0/8 allow
+    hide-identity: yes
+    hide-version: yes
+    harden-glue: yes
+    use-caps-for-id: no
+EOF
+    systemctl enable unbound
+    systemctl restart unbound
+"
+
+# === Point Pi-hole to Unbound ===
+echo "[*] Configuring Pi-hole to use Unbound..."
+pct exec $CTID -- bash -c "
+    pihole -a setdns 127.0.0.1#5335
+    pihole restartdns
+"
+
+# === Autostart on boot ===
+pct set $CTID --onboot 1
+
+# === Final info ===
+IP_ADDR=$(echo $IP | cut -d'/' -f1)
+echo "✅ Setup complete!"
+echo "Container $CTID is running at $IP_ADDR"
+echo "Pi-hole Web UI: http://$IP_ADDR/admin"
+echo "SSH access: ssh root@$IP_ADDR"
+echo "DNS test: dig example.com @$IP_ADDR"
+echo "passwd to enter password so u can ssh root to it"
+echo "if pihole install fail ssh into it using konsole and type curl -sSL https://install.pi-hole.net | bash"
