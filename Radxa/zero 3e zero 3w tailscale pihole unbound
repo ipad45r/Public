@@ -50,3 +50,30 @@ systemctl restart unbound
 systemctl enable unbound
 
 dig @127.0.0.1 -p 5335 google.com
+
+
+
+
+## set ufw
+
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+
+sudo ufw allow in on tailscale0 to any port 22 proto tcp
+
+sudo ufw allow in on tailscale0 to any port 53
+sudo ufw allow in on tailscale0 to any port 80
+sudo ufw allow in on tailscale0 to any port 443
+
+#if using LAN ethernet
+sudo ufw allow in on eth0 to any port 53
+sudo ufw allow in on eth0 to any port 80
+sudo ufw allow in on eth0 to any port 443
+
+#if using wlan (zero3w)
+sudo ufw allow in on wlan0 to any port 53
+sudo ufw allow in on wlan0 to any port 80
+sudo ufw allow in on wlan0 to any port 443
+
+
