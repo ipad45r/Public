@@ -9,6 +9,11 @@ systemctl enable --now tailscaled
 # Login & bring up Tailscale (won't override DNS)
 tailscale up --accept-dns=false
 
+echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
+
+
 #!/bin/bash
 # Step 2: Install Pi-hole
 curl -sSL https://install.pi-hole.net | bash
