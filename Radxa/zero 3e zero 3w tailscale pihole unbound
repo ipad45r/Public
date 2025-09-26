@@ -1,0 +1,47 @@
+## 1. Install & Setup Tailscale
+
+
+#!/bin/bash
+# Step 1: Install Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+systemctl enable --now tailscaled
+
+# Login & bring up Tailscale (won't override DNS)
+tailscale up --accept-dns=false
+
+#!/bin/bash
+# Step 2: Install Pi-hole
+curl -sSL https://install.pi-hole.net | bash
+
+#!/bin/bash
+# Step 3: Install Unbound
+apt install -y unbound
+
+# Download root hints
+mkdir -p /var/lib/unbound
+wget -O /var/lib/unbound/root.hints https://www.internic.net/domain/named.root
+
+# Write Pi-hole Unbound config
+cat > /etc/unbound/unbound.conf.d/pi-hole.conf <<'EOF'
+server:
+    verbosity: 0
+    interface: 127.0.0.1
+    port: 5335
+    do-ip4: yes
+    do-udp: yes
+    do-tcp: yes
+    root-hints: "/var/lib/unbound/root.hints"
+    hide-identity: yes
+    hide-version: yes
+    harden-glue: yes
+    harden-dnssec-stripped: yes
+    use-caps-for-id: yes
+    edns-buffer-size: 1232
+    prefetch: yes
+EOF
+
+# Restart Unbound
+systemctl restart unbound
+systemctl enable unbound
+
+dig @127.0.0.1 -p 5335 google.com
