@@ -1,0 +1,29 @@
+#!/bin/bash
+name="aa"
+lock_file="$HOME/scripts/$name.lock"
+source="aaaa"
+destination="bbbb:b
+trap 'rm -f "$lock_file; exit 0' SIGINT SIGTERM
+if [ -e "$lock_file" ]
+then
+    echo "Rclone upload script is already running."
+    exit
+else
+    rm "$HOME"/scripts/$name.log
+    touch "$lock_file"
+    "$HOME"/bin/rclone move "$source" "$destination" \
+        --config="$HOME"/.config/rclone/rclone.conf \
+        --drive-chunk-size 64M \
+        --tpslimit 5 \
+        -vvv \
+        --drive-stop-on-upload-limit \
+        --delete-empty-src-dirs \
+        --bwlimit=8M \
+        --use-mmap \
+        --transfers=2 \
+        --checkers=4 \
+        --log-file "$HOME"/scripts/$name.log
+    rm -f "$lock_file"
+    trap - SIGINT SIGTERM
+    exit
+fi
