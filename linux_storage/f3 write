@@ -1,0 +1,7 @@
+no test real disk capacity, like h2testw for windows
+
+sudo apt install f3write
+partition disk using eg gparted
+
+then start writing
+f3write /media/flash-drive-mount-point
