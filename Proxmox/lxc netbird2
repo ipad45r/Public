@@ -1,0 +1,25 @@
+
+https://netbird.io/knowledge-hub/proxmox-getting-started-guide
+https://www.youtube.com/watch?v=KMNS_JoHFhg
+
+create lxc container, in this case 202
+lxc netbird
+
+from proxmox host shell:
+nano and enter code below (important to make netbird work well)
+nano /etc/pve/lxc/<lxc_number>.conf 
+eg:
+nano /etc/pve/lxc/202.conf 
+
+lxc.cgroup2.devices.allow: c 10:200 rwm
+lxc.mount.entry: /dev/net dev/net none bind,create=dir
+lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
+
+update and install curl
+apt update && apt upgrade -y && apt install curl -y
+
+install netbird using script
+curl -fsSL https://pkgs.netbird.io/install.sh | sh
+  netbird up --setup-key <SETUP KEY>
+or
+  netbird up -k <SETUP KEY>
