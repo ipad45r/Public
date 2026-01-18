@@ -1,10 +1,15 @@
-when duplicating vm, it might produce same it (conflict)
+when duplicating vm, it might produce same ip (conflict)
 
 run this in the vm
 
 echo -n >/etc/machine-id
 rm /var/lib/dbus/machine-id
 ln -s /etc/machine-id /var/lib/dbus/machine-id
+
+or other user
+This worked for me too. Using Ubuntu 24.04.
+In fact I only did
+> dbus-uuidgen > /etc/machine-id
 
 
 or gemini said
