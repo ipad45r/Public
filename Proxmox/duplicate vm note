@@ -5,3 +5,16 @@ run this in the vm
 echo -n >/etc/machine-id
 rm /var/lib/dbus/machine-id
 ln -s /etc/machine-id /var/lib/dbus/machine-id
+
+
+or gemini said
+
+3. Solving Ubuntu/Linux Specifics (Machine-ID)
+If you are cloning/restoring Ubuntu (22.04+), DHCP may use the machine ID (/etc/machine-id) instead of the MAC address to assign IP addresses, causing clones to take the same IP. 
+
+    Fix: Before shutting down the VM to create the backup, run:
+    bash
+
+truncate -s 0 /etc/machine-id
+rm /var/lib/dbus/machine-id
+ln -s /etc/machine-id /var/lib/dbus/machine-id
