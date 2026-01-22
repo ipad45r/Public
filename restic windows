@@ -1,0 +1,48 @@
+@echo off
+setlocal EnableExtensions EnableDelayedExpansion
+
+REM ===== CONFIG (explicit, no export, no setx) =====
+set REPO=rclone:gdrive_crypt:backup
+set PASSFILE=%USERPROFILE%\.config\restic\password.txt
+set EXCLUDEFILE=%USERPROFILE%\.config\restic\excludes.txt
+set LOGDIR=%USERPROFILE%\restic_log
+set BACKUP_SRC=D:\Data
+REM ================================================
+
+if not exist "%LOGDIR%" mkdir "%LOGDIR%"
+
+REM Date: YYYY-MM-DD
+for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set TODAY=%%i
+set LOGFILE=%LOGDIR%\weekly-%TODAY%.log
+
+echo === Weekly backup start %DATE% %TIME% === >> "%LOGFILE%"
+
+REM ---- BACKUP (must succeed first) ----
+restic backup "%BACKUP_SRC%" ^
+  --repo "%REPO%" ^
+  --password-file "%PASSFILE%" ^
+  --exclude-file "%EXCLUDEFILE%" ^
+  --tag weekly ^
+  --host "%COMPUTERNAME%" >> "%LOGFILE%" 2>&1
+
+if errorlevel 1 (
+  echo Backup FAILED >> "%LOGFILE%"
+  exit /b 1
+)
+
+REM ---- FORGET + PRUNE ----
+restic forget ^
+  --repo "%REPO%" ^
+  --password-file "%PASSFILE%" ^
+  --keep-weekly 8 ^
+  --keep-monthly 6 ^
+  --keep-yearly 1 ^
+  --prune ^
+  --max-unused 5%% >> "%LOGFILE%" 2>&1
+
+if errorlevel 1 (
+  echo Prune FAILED >> "%LOGFILE%"
+  exit /b 1
+)
+
+echo === Weekly backup end %DATE% %TIME% === >> "%LOGFILE%"
