@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Load config (no export)
+source "$HOME/.config/restic/config"
+
+mkdir -p "$RESTIC_LOG_DIR"
+LOG="$RESTIC_LOG_DIR/weekly-$(date +%F).log"
+
+{
+  echo "=== Weekly backup start $(date) ==="
+
+  restic backup /data \
+    --repo "$RESTIC_REPOSITORY" \
+    --password-file "$RESTIC_PASSWORD_FILE" \
+    --exclude-file "$RESTIC_EXCLUDE_FILE" \
+    --tag weekly \
+    --host "$(hostname)"
+
+  restic forget \
+    --repo "$RESTIC_REPOSITORY" \
+    --password-file "$RESTIC_PASSWORD_FILE" \
+    --keep-weekly 8 \
+    --keep-monthly 6 \
+    --keep-yearly 1 \
+    --prune \
+    --max-unused 5%
+
+  echo "=== Weekly backup end $(date) ==="
+} >> "$LOG" 2>&1
