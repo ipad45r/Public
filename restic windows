@@ -1,48 +1,61 @@
-@echo off
-setlocal EnableExtensions EnableDelayedExpansion
+# ================= Configuration =================
+$Repo = "rclone:gdrive_crypt:backup"
+$PassFile = "$HOME\.config\restic\password.txt"
+$ExcludeFile = "$HOME\.config\restic\excludes.txt"
+$LogDir = "$HOME\restic_log"
 
-REM ===== CONFIG (explicit, no export, no setx) =====
-set REPO=rclone:gdrive_crypt:backup
-set PASSFILE=%USERPROFILE%\.config\restic\password.txt
-set EXCLUDEFILE=%USERPROFILE%\.config\restic\excludes.txt
-set LOGDIR=%USERPROFILE%\restic_log
-set BACKUP_SRC=D:\Data
-REM ================================================
+$BackupFolders = @(
+    "D:\Data",
+    "E:\Photos",
+    "F:\Projects"
+)
+# ===============================================
 
-if not exist "%LOGDIR%" mkdir "%LOGDIR%"
+# Ensure log directory exists
+if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
 
-REM Date: YYYY-MM-DD
-for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set TODAY=%%i
-set LOGFILE=%LOGDIR%\weekly-%TODAY%.log
+# Log file
+$DateStr = Get-Date -Format "yyyy-MM-dd"
+$LogFile = Join-Path $LogDir "weekly-$DateStr.log"
 
-echo === Weekly backup start %DATE% %TIME% === >> "%LOGFILE%"
+Write-Output "=== Weekly backup start $(Get-Date) ===" | Out-File $LogFile -Append
 
-REM ---- BACKUP (must succeed first) ----
-restic backup "%BACKUP_SRC%" ^
-  --repo "%REPO%" ^
-  --password-file "%PASSFILE%" ^
-  --exclude-file "%EXCLUDEFILE%" ^
-  --tag weekly ^
-  --host "%COMPUTERNAME%" >> "%LOGFILE%" 2>&1
-
-if errorlevel 1 (
-  echo Backup FAILED >> "%LOGFILE%"
-  exit /b 1
+# Build backup command
+$BackupCmd = @(
+    "backup"
+) + $BackupFolders + @(
+    "--repo", $Repo,
+    "--password-file", $PassFile,
+    "--exclude-file", $ExcludeFile,
+    "--tag", "weekly",
+    "--host", $env:COMPUTERNAME
 )
 
-REM ---- FORGET + PRUNE ----
-restic forget ^
-  --repo "%REPO%" ^
-  --password-file "%PASSFILE%" ^
-  --keep-weekly 8 ^
-  --keep-monthly 6 ^
-  --keep-yearly 1 ^
-  --prune ^
-  --max-unused 5%% >> "%LOGFILE%" 2>&1
+# Run backup
+try {
+    & restic @BackupCmd 2>&1 | Tee-Object -FilePath $LogFile -Append
+} catch {
+    Write-Output "Backup FAILED: $_" | Out-File $LogFile -Append
+    exit 1
+}
 
-if errorlevel 1 (
-  echo Prune FAILED >> "%LOGFILE%"
-  exit /b 1
+# Forget + prune
+$ForgetCmd = @(
+    "forget",
+    "--repo", $Repo,
+    "--password-file", $PassFile,
+    "--keep-weekly", "8",
+    "--keep-monthly", "6",
+    "--keep-yearly", "1",
+    "--prune",
+    "--max-unused", "5%"
 )
 
-echo === Weekly backup end %DATE% %TIME% === >> "%LOGFILE%"
+try {
+    & restic @ForgetCmd 2>&1 | Tee-Object -FilePath $LogFile -Append
+} catch {
+    Write-Output "Prune FAILED: $_" | Out-File $LogFile -Append
+    exit 1
+}
+
+Write-Output "=== Weekly backup end $(Get-Date) ===" | Out-File $LogFile -Append
