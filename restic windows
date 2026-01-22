@@ -1,13 +1,13 @@
 # ================= Configuration =================
-$Repo = "rclone:gdrive_crypt:backup"
-$PassFile = "$HOME\.config\restic\password.txt"
-$ExcludeFile = "$HOME\.config\restic\excludes.txt"
+$Repo = "path to repo"
+$PassFile = "path to pass"
+### $ExcludeFile = "$HOME\.config\restic\excludes.txt"
 $LogDir = "$HOME\restic_log"
 
 $BackupFolders = @(
-    "D:\Data",
-    "E:\Photos",
-    "F:\Projects"
+    "folder1",
+    "folder2"
+
 )
 # ===============================================
 
@@ -25,10 +25,9 @@ $BackupCmd = @(
     "backup"
 ) + $BackupFolders + @(
     "--repo", $Repo,
-    "--password-file", $PassFile,
-    "--exclude-file", $ExcludeFile,
-    "--tag", "weekly",
-    "--host", $env:COMPUTERNAME
+    "--password-file", $PassFile
+
+
 )
 
 # Run backup
