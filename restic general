@@ -1,26 +1,61 @@
-#!/usr/bin/env bash
-set -euo pipefail
+# ================= Configuration =================
+$Repo = "rclone:gdrive_crypt:backup"
+$PassFile = "$HOME\.config\restic\password.txt"
+$ExcludeFile = "$HOME\.config\restic\excludes.txt"
+$LogDir = "$HOME\restic_log"
 
-REPO="rclone:gdrive_crypt:backup"
-PASSFILE="$HOME/.config/restic/password"
-LOG="$HOME/restic_log/weekly-$(date +%F).log"
+$BackupFolders = @(
+    "D:\Data",
+    "E:\Photos",
+    "F:\Projects"
+)
+# ===============================================
 
-{
-  echo "=== Weekly backup start $(date) ==="
+# Ensure log directory exists
+if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
 
-  restic backup /data \
-    --repo "$REPO" \
-    --password-file "$PASSFILE" \
-    --tag weekly
+# Log file
+$DateStr = Get-Date -Format "yyyy-MM-dd"
+$LogFile = Join-Path $LogDir "weekly-$DateStr.log"
 
-  restic forget \
-    --repo "$REPO" \
-    --password-file "$PASSFILE" \
-    --keep-weekly 8 \
-    --keep-monthly 6 \
-    --keep-yearly 1 \
-    --prune \
-    --max-unused 5%
+Write-Output "=== Weekly backup start $(Get-Date) ===" | Out-File $LogFile -Append
 
-  echo "=== Weekly backup end $(date) ==="
-} >> "$LOG" 2>&1
+# Build backup command
+$BackupCmd = @(
+    "backup"
+) + $BackupFolders + @(
+    "--repo", $Repo,
+    "--password-file", $PassFile,
+    "--exclude-file", $ExcludeFile,
+    "--tag", "weekly",
+    "--host", $env:COMPUTERNAME
+)
+
+# Run backup
+try {
+    & restic @BackupCmd 2>&1 | Tee-Object -FilePath $LogFile -Append
+} catch {
+    Write-Output "Backup FAILED: $_" | Out-File $LogFile -Append
+    exit 1
+}
+
+# Forget + prune
+$ForgetCmd = @(
+    "forget",
+    "--repo", $Repo,
+    "--password-file", $PassFile,
+    "--keep-weekly", "8",
+    "--keep-monthly", "6",
+    "--keep-yearly", "1",
+    "--prune",
+    "--max-unused", "5%"
+)
+
+try {
+    & restic @ForgetCmd 2>&1 | Tee-Object -FilePath $LogFile -Append
+} catch {
+    Write-Output "Prune FAILED: $_" | Out-File $LogFile -Append
+    exit 1
+}
+
+Write-Output "=== Weekly backup end $(Get-Date) ===" | Out-File $LogFile -Append
