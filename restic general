@@ -1,25 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Load config (no export)
-source "$HOME/.config/restic/config"
-
-mkdir -p "$RESTIC_LOG_DIR"
-LOG="$RESTIC_LOG_DIR/weekly-$(date +%F).log"
+REPO="rclone:gdrive_crypt:backup"
+PASSFILE="$HOME/.config/restic/password"
+LOG="$HOME/restic_log/weekly-$(date +%F).log"
 
 {
   echo "=== Weekly backup start $(date) ==="
 
   restic backup /data \
-    --repo "$RESTIC_REPOSITORY" \
-    --password-file "$RESTIC_PASSWORD_FILE" \
-    --exclude-file "$RESTIC_EXCLUDE_FILE" \
-    --tag weekly \
-    --host "$(hostname)"
+    --repo "$REPO" \
+    --password-file "$PASSFILE" \
+    --tag weekly
 
   restic forget \
-    --repo "$RESTIC_REPOSITORY" \
-    --password-file "$RESTIC_PASSWORD_FILE" \
+    --repo "$REPO" \
+    --password-file "$PASSFILE" \
     --keep-weekly 8 \
     --keep-monthly 6 \
     --keep-yearly 1 \
