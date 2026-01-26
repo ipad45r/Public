@@ -1,0 +1,23 @@
+#using community of docker
+#sometime need to chown --> chown user:group path
+
+  services:
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: syncthing
+    hostname: syncthing
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Singapore
+    volumes:
+      - ./config:/config
+      - ./data:/data
+      - /hdd1:/hdd1
+  
+    ports:
+      - "8384:8384"     # Web UI
+      - "22000:22000/tcp" # Sync
+      - "22000:22000/udp"
+      - "21027:21027/udp" # Local discovery
+    restart: unless-stopped
