@@ -1,0 +1,25 @@
+#How to use
+#Setup venv for security
+
+# Create venv for folder called .venv
+python3 -m venv venv
+
+#Activate the venv
+source venv/bin/activate
+
+#install required packages
+pip install --upgrade pip
+pip install telethon python-dotenv
+
+Then edit env file
+
+Edit all according
+
+Then edit py file
+
+Edit ENV_PATH 
+
+For cron
+Then run py file 
+
+venv/bin/python3 file.py /path/to/folder
