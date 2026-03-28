@@ -1,0 +1,20 @@
+assume id is vm 100
+
+install lshw since it is not pre-install
+apt install lshw
+lshw -class disk -class storage
+
+find /dev/disk/by-id/ -type l|xargs -I{} ls -l {}|grep -v -E '[0-9]$' |sort -k11|cut -d' ' -f9,10,11,12
+lshw -class disk -class storage
+
+##Hot-Plug/Add physical device as new virtual SCSI disk
+
+qm set 100 -scsi2 /dev/disk/by-id/ata-disk-xx
+
+qm set 100 -scsi3 /dev/disk/by-id/ata-disk-xxx
+
+scsi2 and scsi3 is incremental each time 
+
+##Hot-Unplug/Remove virtual disk
+
+qm unlink 100 --idlist scsi2
