@@ -18,3 +18,8 @@ scsi2 and scsi3 is incremental each time
 ##Hot-Unplug/Remove virtual disk
 
 qm unlink 100 --idlist scsi2
+
+#extra note
+exclude disk from backup
+To exclude a SCSI disk from VM backup in Proxmox:
+👉 Go to VM → Hardware → Disk → Edit → uncheck “Backup”
