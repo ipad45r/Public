@@ -1,0 +1,10 @@
+sudo adduser username
+
+Create the user
+Create a home directory (/home/john)
+Prompt you to set a password
+Ask for optional info (you can press Enter to skip
+
+add user to linger
+
+sudo loginctl enable-linger username
