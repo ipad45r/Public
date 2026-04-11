@@ -7,5 +7,10 @@ python -m venv venv
 #for tg
 sudo apt install python3-pip
 then
+activate source
+source venv/bin/activate
+then
 pip install telethon python-dotenv
+
+
 
