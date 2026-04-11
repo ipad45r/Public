@@ -1,0 +1,6 @@
+# this will create venv at home folder, tested at python at ubuntu
+#1. install 
+apt install python3.12-venv
+#run command
+python -m venv venv
+
