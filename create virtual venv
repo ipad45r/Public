@@ -5,5 +5,7 @@ apt install python3.12-venv
 python -m venv venv
 
 #for tg
+sudo apt install python3-pip
+then
 pip install telethon python-dotenv
 
