@@ -4,3 +4,6 @@ apt install python3.12-venv
 #run command
 python -m venv venv
 
+#for tg
+pip install telethon python-dotenv
+
