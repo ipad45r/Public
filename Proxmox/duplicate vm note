@@ -23,3 +23,34 @@ If you are cloning/restoring Ubuntu (22.04+), DHCP may use the machine ID (/etc/
 truncate -s 0 /etc/machine-id
 rm /var/lib/dbus/machine-id
 ln -s /etc/machine-id /var/lib/dbus/machine-id
+
+
+🔐 1. Regenerate SSH host keys (Linux VM)
+
+Run on the cloned VM:
+sudo rm -f /etc/ssh/ssh_host_*
+sudo dpkg-reconfigure openssh-server
+
+If dpkg-reconfigure is not available (or on some distros), use:
+sudo ssh-keygen -A
+
+Then restart SSH:
+sudo systemctl restart ssh
+
+Some systems also reuse identity files.
+
+Check and reset machine-id:
+sudo rm -f /etc/machine-id
+sudo systemd-machine-id-setup
+
+After cloning VM:
+
+Change hostname
+Regenerate SSH keys (steps above)
+Ensure DHCP/static IP is unique
+Optionally regenerate /etc/hostname + /etc/hosts
+
+Example:
+
+sudo hostnamectl set-hostname new-vm-name
+
